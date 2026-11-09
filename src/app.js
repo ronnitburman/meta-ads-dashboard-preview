@@ -109,6 +109,7 @@
     renderInsights(rows);
     renderCharts(rows, label, unit);
     renderTable(rows, label, unit);
+    refreshPreview();
   }
 
   function renderFiles() {
@@ -304,18 +305,48 @@
     }
   }
 
-  let copyTimer;
-  $('#copy').addEventListener('click', async () => {
+  const isTouch = matchMedia('(pointer: coarse)').matches;
+  const isMac = /Mac|iPhone|iPad/.test(navigator.userAgent);
+  const pasteHint = isTouch ? 'long-press → Paste' : isMac ? '⌘V' : 'Ctrl+V';
+  document.querySelectorAll('[data-paste]').forEach((el) => { el.textContent = pasteHint; });
+
+  function aiText() {
     const hiddenAccounts = [...new Map(allRows().filter((r) => state.hidden.has(r.accountId)).map((r) => [r.accountId, r.account])).values()];
-    const text = contextReport(filteredRows(), { currency, hideIdle: state.hideIdle, hiddenAccounts });
+    return contextReport(filteredRows(), { currency, hideIdle: state.hideIdle, hiddenAccounts, question: $('#aiQuestion').value });
+  }
+
+  function refreshPreview() {
+    const preview = $('#aiPreview');
+    if (preview.open) preview.querySelector('textarea').value = aiText();
+  }
+
+  // `target` names the assistant being opened, if any.
+  async function copyForAI(target) {
+    const text = aiText();
     const ok = await copyText(text);
     const status = $('#copyStatus');
+    status.classList.toggle('error', !ok);
+    const asked = $('#aiQuestion').value.trim() ? ' and your question' : '';
     status.textContent = ok
-      ? `Copied ${text.trimEnd().split('\n').length} lines. Paste into your AI assistant and ask away.`
-      : 'Could not copy. Your browser blocked clipboard access.';
-    clearTimeout(copyTimer);
-    copyTimer = setTimeout(() => { status.textContent = ''; }, 5000);
+      ? `Copied the data${asked} (${text.trimEnd().split('\n').length} lines). ${target ? `In ${target}, click` : 'Open your AI chat, click'} the message box and paste (${pasteHint}), then send.`
+      : 'Your browser blocked copying. Open "See exactly what gets copied" below, select all the text and copy it yourself.';
+    if (!ok) { $('#aiPreview').open = true; refreshPreview(); }
+  }
+
+  // The link still opens the assistant in a new tab; copying starts in the same click.
+  document.querySelectorAll('[data-assistant]').forEach((a) => a.addEventListener('click', () => copyForAI(a.textContent.trim())));
+  $('#copy').addEventListener('click', () => copyForAI());
+
+  document.querySelectorAll('.chip').forEach((chip) => chip.addEventListener('click', () => {
+    $('#aiQuestion').value = chip.textContent;
+    document.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', String(c === chip)));
+    refreshPreview();
+  }));
+  $('#aiQuestion').addEventListener('input', (e) => {
+    document.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', String(c.textContent === e.target.value)));
+    refreshPreview();
   });
+  $('#aiPreview').addEventListener('toggle', refreshPreview);
 
   $('#hideIdle').addEventListener('change', (e) => { state.hideIdle = e.target.checked; render(); });
   $('#table').addEventListener('click', (e) => {

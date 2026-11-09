@@ -82,13 +82,15 @@ The dashboard remembers your files on this computer, in this browser, until you 
 
 ### Ask an AI about your data
 
-Click **Copy for AI** (next to the date filters). It copies everything the dashboard is currently showing, as text: the period and accounts, the totals, per-account and per-campaign tables, the patterns found, and the day-by-day and weekday numbers. Paste it into ChatGPT, Claude, Gemini or any assistant and ask your question, for example:
+Below the patterns there's an **Ask an AI about this data** panel. It takes three steps:
 
-- *"Why might one account's cost per lead be 3× higher than the other's, and what should I test first?"*
-- *"Which campaign should get more budget next week?"*
-- *"Write a short performance update for my team."*
+1. **Pick a question** (such as *"What should I fix first?"* or *"Which campaign deserves more budget?"*) or type your own. You can also leave it empty, and the AI will start with the three most important takeaways.
+2. **Click your assistant: ChatGPT, Claude, Gemini or Copilot.** That one click copies the data and your question and opens the chat in a new tab. Use another assistant? Click **Just copy**.
+3. **Paste into the chat and send** (⌘V on Mac, Ctrl+V on Windows, long-press → Paste on a phone). Then keep asking follow-up questions as normal.
 
-The copy follows your filters, so hide an account or narrow the dates first to ask about just that slice. Only what you paste leaves your computer.
+The copy covers exactly what's on screen: the period, accounts, totals, per-account and per-campaign tables, the patterns found, and the day-by-day and weekday numbers. Hide an account or narrow the dates first to ask about just that slice. To see exactly what will be shared, open **See exactly what gets copied**. Nothing leaves your device until you paste it.
+
+The **Ask AI about this** button next to the date filters jumps to the panel.
 
 ### Patterns it looks for
 
@@ -128,7 +130,7 @@ Plain HTML, CSS and JavaScript with no build step and no runtime dependencies to
 index.html        page shell
 src/parse.js      CSV records → normalised rows (header matching, account from file name, de-dupe)
 src/analyze.js    totals, daily series, per-campaign stats, pattern detection (pure functions)
-src/report.js     Markdown summary of the current view for the Copy for AI button
+src/report.js     Markdown summary of the current view (plus the question) for the Ask AI panel
 src/app.js        upload, filters, rendering, charts, install/share plumbing
 sw.js             service worker: offline cache (stale-while-revalidate) + Android share target
 manifest.webmanifest  install metadata, icons, share target, desktop file handler

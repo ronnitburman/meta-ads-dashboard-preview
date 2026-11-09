@@ -62,6 +62,13 @@ test('pipes in names do not break tables', () => {
   assert.match(md, /\| UAE \\\| Leads \|/);
 });
 
+test('the question goes last; without one the AI is asked for the top takeaways', () => {
+  const rows = load(a, b);
+  assert.match(contextReport(rows, { question: '  Which campaign should I pause?  ' }), /## My question\n\nWhich campaign should I pause\?\n$/);
+  assert.match(contextReport(rows), /## My question\n\nStart with the 3 most important takeaways/);
+  assert.match(contextReport(rows), /My question is at the end\./);
+});
+
 test('empty selection says so', () => {
   assert.equal(contextReport([]), 'No Meta Ads data loaded.');
 });

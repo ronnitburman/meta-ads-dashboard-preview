@@ -18,7 +18,9 @@
     ...body.map((r) => `| ${r.map(cell).join(' | ')} |`),
   ].join('\n');
 
-  // opts: { currency, hideIdle, hiddenAccounts: [names], from, to }
+  const DEFAULT_QUESTION = 'Start with the 3 most important takeaways from this data and what I should do about each. Keep it practical, and tell me if the numbers are too small to be sure.';
+
+  // opts: { currency, hideIdle, hiddenAccounts: [names], question }
   function contextReport(rows, opts = {}) {
     const currency = opts.currency ?? 'INR';
     const num = (n, digits = 0) => (n == null ? '–' : n.toLocaleString('en-IN', { minimumFractionDigits: digits, maximumFractionDigits: digits }));
@@ -38,7 +40,7 @@
     const out = [];
     out.push(`# Meta Ads performance${range ? `: ${longDay(range.from)} to ${longDay(range.to)}` : ''}`);
     out.push([
-      `Context: summary from my Meta Ads Manager CSV exports (${level.toLowerCase()} level${range ? ', daily breakdown' : ''}), produced by a local dashboard. Please use it to answer my questions about ad performance.`,
+      `Context: summary from my Meta Ads Manager CSV exports (${level.toLowerCase()} level${range ? ', daily breakdown' : ''}), produced by a local dashboard. Please use it to answer my questions about ad performance. My question is at the end.`,
       '',
       `- Accounts: ${accountNames.join(', ')}`,
       opts.hiddenAccounts?.length ? `- Excluded by filter: ${opts.hiddenAccounts.join(', ')}` : null,
@@ -105,6 +107,8 @@
         byWeekday(rows).map((w) => [w.name, money(w.spend), num(w.impressions), num(w.clicks), pct(w.ctr), num(w.results), money(w.cpr)]),
       ));
     }
+
+    out.push(`## My question\n\n${opts.question?.trim() || DEFAULT_QUESTION}`);
 
     return out.join('\n\n') + '\n';
   }

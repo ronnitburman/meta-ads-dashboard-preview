@@ -42,11 +42,10 @@
           <label>From <input id="from" type="date"></label>
           <label>To <input id="to" type="date"></label>
           <label class="check"><input id="hideIdle" type="checkbox" checked> Hide zero-spend campaigns</label>
-          <button id="copy" class="copy" type="button" title="Copies the numbers, tables and patterns for this view as text you can paste into ChatGPT, Claude or any AI assistant">
-            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
-            <span>Copy for AI</span>
-          </button>
-          <span id="copyStatus" class="muted" role="status" aria-live="polite"></span>
+          <a class="copy" href="#ask-ai">
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>Ask AI about this</span>
+          </a>
         </div>
       </section>
 
@@ -55,6 +54,61 @@
       <section class="panel">
         <h2>What the data says</h2>
         <ul id="insights" class="insights"></ul>
+      </section>
+
+      <section id="ask-ai" class="panel ask" aria-labelledby="askTitle">
+        <div class="ask-head">
+          <h2 id="askTitle">Ask an AI about this data</h2>
+          <p class="muted">Get answers in plain English from ChatGPT, Claude or any assistant you use. We copy a summary of everything on this page (respecting your filters); you paste it into the chat. Nothing is sent anywhere until you paste it.</p>
+        </div>
+
+        <ol class="steps">
+          <li>
+            <span class="step-n" aria-hidden="true">1</span>
+            <div class="step-body">
+              <label for="aiQuestion" class="step-title">What do you want to know? <span class="muted">(optional)</span></label>
+              <div class="chips" role="group" aria-label="Example questions">
+                <button type="button" class="chip">What should I fix first, and why?</button>
+                <button type="button" class="chip">Why does one account get leads cheaper than the other?</button>
+                <button type="button" class="chip">Which campaign deserves more budget next week?</button>
+                <button type="button" class="chip">Suggest 3 tests to lower my cost per lead.</button>
+                <button type="button" class="chip">Write a short weekly update for my team.</button>
+              </div>
+              <textarea id="aiQuestion" rows="2" placeholder="Type your own question, or pick one above. Leave empty and the AI will start with the top 3 takeaways."></textarea>
+            </div>
+          </li>
+          <li>
+            <span class="step-n" aria-hidden="true">2</span>
+            <div class="step-body">
+              <span class="step-title">Copy and open your assistant</span>
+              <p class="muted small">One click copies the data and your question, then opens the chat in a new tab.</p>
+              <div class="assistants">
+                <a class="assistant" data-assistant href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">ChatGPT</a>
+                <a class="assistant" data-assistant href="https://claude.ai/new" target="_blank" rel="noopener noreferrer">Claude</a>
+                <a class="assistant" data-assistant href="https://gemini.google.com/app" target="_blank" rel="noopener noreferrer">Gemini</a>
+                <a class="assistant" data-assistant href="https://copilot.microsoft.com/" target="_blank" rel="noopener noreferrer">Copilot</a>
+                <button id="copy" type="button" class="assistant secondary">
+                  <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+                  Just copy
+                </button>
+              </div>
+            </div>
+          </li>
+          <li>
+            <span class="step-n" aria-hidden="true">3</span>
+            <div class="step-body">
+              <span class="step-title">Paste into the chat and send</span>
+              <p class="muted small">Click the message box and press <kbd data-paste>⌘V</kbd>. Ask follow-up questions as normal; the AI keeps the data in context.</p>
+            </div>
+          </li>
+        </ol>
+
+        <p id="copyStatus" class="copy-status" role="status" aria-live="polite"></p>
+
+        <details id="aiPreview" class="preview">
+          <summary>See exactly what gets copied</summary>
+          <textarea readonly rows="12" aria-label="Text that will be copied"></textarea>
+        </details>
       </section>
 
       <section class="grid">

@@ -21,7 +21,9 @@ test('every local file index.html loads is cached for offline use', () => {
 });
 
 test('the page loads nothing from third-party servers', () => {
-  assert.deepEqual([...html.matchAll(/(?:src|href)="(https?:[^"]+)"/g)].map((m) => m[1]), []);
+  // <a href> links (e.g. to AI assistants) only navigate when clicked; anything else would be fetched.
+  const loaded = [...html.matchAll(/<(?!a\s)(\w+)[^>]*?(?:src|href)="(https?:[^"]+)"/g)].map((m) => m[2]);
+  assert.deepEqual(loaded, []);
   for (const f of ['src/app.js', 'src/styles.css']) assert.ok(!/https?:\/\//.test(read(f)), f);
 });
 
