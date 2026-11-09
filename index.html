@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Meta Ads Dashboard</title>
+  <meta name="description" content="Turn Meta Ads Manager CSV exports into a dashboard with automatic insights. Runs on your device; nothing is uploaded.">
+  <meta name="theme-color" content="#1c5cab">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Ads Dashboard">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="src/styles.css">
+  <script src="vendor/papaparse.min.js"></script>
+  <script src="vendor/chart.umd.min.js"></script>
+</head>
+<body>
+  <header class="top">
+    <div>
+      <h1>Meta Ads Dashboard</h1>
+      <p class="muted">Drop Ads Manager CSV exports. Everything is processed in your browser; nothing is uploaded.</p>
+    </div>
+    <button id="theme" class="ghost" type="button" aria-label="Toggle dark mode">◐</button>
+  </header>
+
+  <main>
+    <label id="drop" class="drop" for="file">
+      <input id="file" type="file" accept=".csv,text/csv" multiple hidden>
+      <strong>Drop CSV exports here</strong>
+      <span class="muted">or click to choose. Select several files at once (one per ad account), and add more any time; overlapping days are counted once.</span>
+    </label>
+
+    <section id="files" class="files" aria-label="Loaded files"></section>
+    <p id="errors" class="errors" role="alert"></p>
+
+    <div id="dashboard" hidden>
+      <section class="filters" aria-label="Filters">
+        <div id="accountFilter" class="pills" role="group" aria-label="Accounts"></div>
+        <div class="dates">
+          <label>From <input id="from" type="date"></label>
+          <label>To <input id="to" type="date"></label>
+          <label class="check"><input id="hideIdle" type="checkbox" checked> Hide zero-spend campaigns</label>
+          <button id="copy" class="copy" type="button" title="Copies the numbers, tables and patterns for this view as text you can paste into ChatGPT, Claude or any AI assistant">
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+            <span>Copy for AI</span>
+          </button>
+          <span id="copyStatus" class="muted" role="status" aria-live="polite"></span>
+        </div>
+      </section>
+
+      <section id="kpis" class="kpis" aria-label="Key metrics"></section>
+
+      <section class="panel">
+        <h2>What the data says</h2>
+        <ul id="insights" class="insights"></ul>
+      </section>
+
+      <section class="grid">
+        <figure class="panel chart"><figcaption><h3>Daily spend</h3><span class="muted" data-unit></span></figcaption><div class="canvas"><canvas id="cSpend"></canvas></div></figure>
+        <figure class="panel chart"><figcaption><h3 data-results-title>Daily results</h3></figcaption><div class="canvas"><canvas id="cResults"></canvas></div></figure>
+        <figure class="panel chart"><figcaption><h3 data-cpr-title>Cost per result, rolling 7 days</h3><span class="muted" data-unit></span></figcaption><div class="canvas"><canvas id="cCpr"></canvas></div></figure>
+        <figure class="panel chart"><figcaption><h3>Link CTR by day</h3><span class="muted">%</span></figcaption><div class="canvas"><canvas id="cCtr"></canvas></div></figure>
+        <figure class="panel chart wide"><figcaption><h3>By weekday</h3><span class="muted">link CTR % (bars), results per weekday in tooltip</span></figcaption><div class="canvas"><canvas id="cWeekday"></canvas></div></figure>
+      </section>
+
+      <section class="panel">
+        <h2 id="tableTitle">Campaigns</h2>
+        <div class="table-wrap"><table id="table"></table></div>
+      </section>
+    </div>
+  </main>
+
+  <script src="src/parse.js"></script>
+  <script src="src/analyze.js"></script>
+  <script src="src/report.js"></script>
+  <script src="src/app.js"></script>
+</body>
+</html>

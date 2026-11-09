@@ -1,0 +1,10 @@
+{
+  "name": "meta-ads-dashboard",
+  "private": true,
+  "type": "module",
+  "description": "Upload Meta Ads Manager CSV exports and get a dashboard plus auto-detected patterns. Runs entirely in the browser.",
+  "scripts": {
+    "start": "python3 -m http.server 8080",
+    "test": "node --test test/*.test.js"
+  }
+}
