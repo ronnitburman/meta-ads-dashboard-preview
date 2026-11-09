@@ -67,7 +67,7 @@ That's it: the dashboard fills in below.
 |---|---|
 | **Top numbers** | Total spend, leads (or whatever result your campaigns optimise for), cost per lead, clicks, click-through rate, cost per click, cost per 1,000 impressions |
 | **What the data says** | Patterns found automatically, most urgent first. ⛔ **Critical**: money spent with nothing to show. ▲ **Watch**: something slipping. ✓ **Working**: keep doing it. ● **Pattern**: useful to know. |
-| **Charts** | Daily spend, daily leads, cost per lead (7-day average), click-through rate by day, and by weekday. Hover any chart for exact numbers. |
+| **Charts** | Daily spend, daily leads, cost per lead (7-day average), click-through rate by day, and by weekday. **Dots above a chart mark the days that produced a lead** (one row per account, bigger = more), and the CTR and cost-per-lead lines put a point on those days, so you can see what lead days have in common. **Shaded bands are alternate weeks (Mon–Sun)** with dates on each Monday, so weekly rhythms stand out. Hover any day for its weekday, week number, numbers and leads per account. |
 | **Campaigns table** | Every campaign with its results. Click a column heading to sort. *Budget used* shows how much of its daily budget each campaign actually spends. |
 
 **Handy controls**

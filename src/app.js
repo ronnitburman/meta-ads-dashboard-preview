@@ -2,7 +2,7 @@
 (() => {
   const {
     parseExport, combine, totals, byEntity, byWeekday, dailySeries, dateRange, insights, primaryResult, rollingCostPerResult,
-    contextReport,
+    contextReport, weeks, weekdayOf,
   } = globalThis.MetaAds;
   const $ = (sel) => document.querySelector(sel);
   const STORE = 'meta-ads-dashboard:v1';
@@ -208,27 +208,107 @@
     charts[id] = new Chart($(`#${id}`), config);
   }
 
+  // ---------- chart overlays: week bands + lead markers ----------
+  // Shaded alternate weeks with a hairline at each Monday go behind the data;
+  // one row of dots per account above the plot marks days that produced a result.
+  const MARK_ROW = 12;
+  const WEEKDAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const timeOverlays = {
+    id: 'timeOverlays',
+    beforeDraw(chart, _args, opts) {
+      if (!opts.weeks?.length) return;
+      const { ctx, chartArea: a, scales: { x } } = chart;
+      const step = x.getPixelForValue(1) - x.getPixelForValue(0) || a.width;
+      const edge = (i) => x.getPixelForValue(i) - step / 2;
+      ctx.save();
+      ctx.fillStyle = opts.bandColor;
+      for (const w of opts.weeks) {
+        if (w.n % 2) continue;
+        const left = Math.max(a.left, edge(w.from));
+        const right = Math.min(a.right, edge(w.to + 1));
+        ctx.fillRect(left, a.top, right - left, a.bottom - a.top);
+      }
+      ctx.strokeStyle = opts.lineColor;
+      ctx.lineWidth = 1;
+      for (const w of opts.weeks.slice(1)) {
+        const px = Math.round(Math.max(a.left, edge(w.from))) + 0.5;
+        ctx.beginPath();
+        ctx.moveTo(px, a.top);
+        ctx.lineTo(px, a.bottom);
+        ctx.stroke();
+      }
+      ctx.restore();
+    },
+    afterDatasetsDraw(chart, _args, opts) {
+      if (!opts.leads?.length) return;
+      const { ctx, chartArea: a, scales: { x } } = chart;
+      ctx.save();
+      opts.leads.forEach((row, r) => {
+        const y = a.top - (opts.leads.length - r) * MARK_ROW + MARK_ROW / 2 - 3;
+        row.counts.forEach((n, i) => {
+          if (!n) return;
+          ctx.beginPath();
+          ctx.arc(x.getPixelForValue(i), y, Math.min(2.5 + n, 5.5), 0, Math.PI * 2);
+          ctx.fillStyle = row.color;
+          ctx.fill();
+        });
+      });
+      ctx.restore();
+    },
+  };
+
   function renderCharts(rows, label, unit) {
     const series = dailySeries(rows);
     const labels = series.days.map(fmtDay);
     const surface = css('--surface-1');
+    const wk = weeks(series.days);
+    const weekOf = [];
+    for (const w of wk) for (let i = w.from; i <= w.to; i += 1) weekOf[i] = w.n;
+    const leadRows = series.accounts.map((a) => ({ color: seriesColor(a.accountId), counts: a.points.map((p) => p.results) }));
+
+    // Options shared by the day-by-day charts: week bands, week-start labels,
+    // weekday + week in the tooltip title and, optionally, lead markers.
+    const timeOptions = (base, { marks = true } = {}) => {
+      const o = baseOptions(base);
+      o.layout = { padding: { top: marks ? leadRows.length * MARK_ROW + 4 : 4 } };
+      o.plugins.timeOverlays = { weeks: wk, bandColor: css('--surface-2'), lineColor: css('--border'), leads: marks ? leadRows : [] };
+      // Label each Monday; label the first day too unless a Monday follows within 2 days (labels would collide).
+      const labelFirst = (wk[1]?.from ?? Infinity) >= 3;
+      o.scales.x.ticks = { ...o.scales.x.ticks, autoSkip: false, callback: (_v, i) => ((i === 0 && labelFirst) || (i > 0 && weekdayOf(series.days[i]) === 1) ? labels[i] : '') };
+      o.plugins.tooltip.callbacks.title = (items) => {
+        const i = items[0].dataIndex;
+        return `${WEEKDAY_SHORT[weekdayOf(series.days[i])]} ${labels[i]} · Week ${weekOf[i]}`;
+      };
+      if (marks) {
+        o.plugins.tooltip.callbacks.afterBody = (items) => {
+          const i = items[0].dataIndex;
+          return `${label}: ${series.accounts.map((a) => `${a.account} ${a.points[i].results}`).join(' · ')}`;
+        };
+      }
+      return o;
+    };
     const bar = (acc, values) => ({
       label: acc.account, data: values, backgroundColor: seriesColor(acc.accountId),
       borderColor: surface, borderWidth: { top: 2 }, borderRadius: 4, borderSkipped: 'start', maxBarThickness: 18,
     });
+    // Lines show a point only on days that produced a result, so conversions read against the trend.
     const line = (acc, values) => ({
       label: acc.account, data: values, borderColor: seriesColor(acc.accountId), backgroundColor: seriesColor(acc.accountId),
-      borderWidth: 2, pointRadius: 0, pointHoverRadius: 5, spanGaps: true, cubicInterpolationMode: 'monotone',
+      borderWidth: 2, pointHoverRadius: 5, spanGaps: true, cubicInterpolationMode: 'monotone',
+      pointRadius: (c) => (acc.points[c.dataIndex]?.results ? 4 : 0),
+      pointBorderColor: surface, pointBorderWidth: 2,
     });
 
     document.querySelectorAll('[data-unit]').forEach((el) => { el.textContent = currency; });
     document.querySelector('[data-results-title]').textContent = `Daily ${label.toLowerCase()}`;
     document.querySelector('[data-cpr-title]').textContent = `Cost per ${unit}, rolling 7 days`;
+    document.querySelector('[data-lead-key]').textContent = `Day with a ${unit}`;
 
-    draw('cSpend', { type: 'bar', data: { labels, datasets: series.accounts.map((a) => bar(a, a.points.map((p) => p.spend))) }, options: baseOptions({ stacked: true, yFmt: (v) => money(v) }) });
-    draw('cResults', { type: 'bar', data: { labels, datasets: series.accounts.map((a) => bar(a, a.points.map((p) => p.results))) }, options: baseOptions({ stacked: true, integer: true, yFmt: (v) => int(v) }) });
-    draw('cCpr', { type: 'line', data: { labels, datasets: series.accounts.map((a) => line(a, rollingCostPerResult(a.points, 7))) }, options: baseOptions({ yFmt: (v) => money(v) }) });
-    draw('cCtr', { type: 'line', data: { labels, datasets: series.accounts.map((a) => line(a, a.points.map((p) => p.ctr))) }, options: baseOptions({ yFmt: (v) => `${Number(v).toFixed(1)}%` }) });
+    const plugins = [timeOverlays];
+    draw('cSpend', { type: 'bar', plugins, data: { labels, datasets: series.accounts.map((a) => bar(a, a.points.map((p) => p.spend))) }, options: timeOptions({ stacked: true, yFmt: (v) => money(v) }) });
+    draw('cResults', { type: 'bar', plugins, data: { labels, datasets: series.accounts.map((a) => bar(a, a.points.map((p) => p.results))) }, options: timeOptions({ stacked: true, integer: true, yFmt: (v) => int(v) }, { marks: false }) });
+    draw('cCpr', { type: 'line', plugins, data: { labels, datasets: series.accounts.map((a) => line(a, rollingCostPerResult(a.points, 7))) }, options: timeOptions({ yFmt: (v) => money(v) }) });
+    draw('cCtr', { type: 'line', plugins, data: { labels, datasets: series.accounts.map((a) => line(a, a.points.map((p) => p.ctr))) }, options: timeOptions({ yFmt: (v) => `${Number(v).toFixed(1)}%` }) });
 
     const wdByAcc = [...new Map(rows.map((r) => [r.accountId, r.account])).entries()].map(([id, name]) => ({
       accountId: id, account: name, days: byWeekday(rows.filter((r) => r.accountId === id)),

@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { month, record } from './fixtures.js';
 
-const { parseExport, combine, totals, byEntity, dailySeries, insights, rollingCostPerResult, weekdayOf } = globalThis.MetaAds;
+const { parseExport, combine, totals, byEntity, dailySeries, insights, rollingCostPerResult, weekdayOf, weeks, eachDay } = globalThis.MetaAds;
 
 const load = (...files) => combine(files.map(([name, recs]) => parseExport(recs, name)));
 const ids = (list) => list.map((i) => i.id);
@@ -88,4 +88,16 @@ test('critical and warning insights sort before the rest', () => {
 
 test('no spend, no insights', () => {
   assert.deepEqual(insights(load(['1 A-Campaigns-x.csv', month('Idle', () => ({ delivery: 'inactive' }))])), []);
+});
+
+test('weeks run Monday to Sunday, keeping partial weeks at the edges', () => {
+  // Sun 4 Oct 2026 .. Tue 20 Oct 2026
+  const w = weeks(eachDay('2026-10-04', '2026-10-20'));
+  assert.deepEqual(w.map((x) => [x.n, x.start, x.from, x.to]), [
+    [1, '2026-10-04', 0, 0],
+    [2, '2026-10-05', 1, 7],
+    [3, '2026-10-12', 8, 14],
+    [4, '2026-10-19', 15, 16],
+  ]);
+  assert.deepEqual(weeks([]), []);
 });

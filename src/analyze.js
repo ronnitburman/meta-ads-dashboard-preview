@@ -107,6 +107,17 @@
     return new Date(`${date}T00:00:00Z`).getUTCDay();
   }
 
+  // Splits consecutive days into Monday–Sunday weeks (a partial first/last
+  // week is kept). Returns [{ n, from, to, start }] with day indices.
+  function weeks(days) {
+    const out = [];
+    days.forEach((d, i) => {
+      if (i === 0 || weekdayOf(d) === 1) out.push({ n: out.length + 1, from: i, to: i, start: d });
+      else out[out.length - 1].to = i;
+    });
+    return out;
+  }
+
   function byWeekday(rows) {
     const g = groupBy(rows.filter((r) => r.daily), (r) => weekdayOf(r.start));
     return WEEKDAYS.map((name, i) => ({ name, ...totals(g.get(i) ?? []) }));
@@ -335,6 +346,6 @@
   }
 
   globalThis.MetaAds = Object.assign(globalThis.MetaAds, {
-    totals, groupBy, primaryResult, byEntity, byAccount, dateRange, eachDay, dailySeries, weekdayOf, byWeekday, insights, rollingCostPerResult: rolling,
+    totals, groupBy, primaryResult, byEntity, byAccount, dateRange, eachDay, dailySeries, weekdayOf, weeks, byWeekday, insights, rollingCostPerResult: rolling,
   });
 })();

@@ -316,6 +316,10 @@ kbd { font: 500 11px/1 var(--font); padding: 3px 6px; border: 1px solid var(--bo
 .chart.wide { grid-column: 1 / -1; }
 .chart figcaption { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 12px; }
 .unit { font-size: 12px; color: var(--text-muted); }
+.chart-key { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 12px; color: var(--text-secondary); }
+.chart-key > span { display: inline-flex; align-items: center; gap: 6px; }
+.key-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-secondary); }
+.key-band { width: 14px; height: 10px; border-radius: 2px; background: var(--surface-2); border-left: 1px solid var(--border-strong); }
 .canvas { position: relative; height: 240px; }
 
 /* ---------- table ---------- */

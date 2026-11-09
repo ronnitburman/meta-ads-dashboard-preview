@@ -162,7 +162,11 @@
       <section class="section" aria-labelledby="trendsTitle">
         <div class="section-head">
           <h2 id="trendsTitle">Trends</h2>
-          <p class="muted">Hover a chart for exact numbers.</p>
+          <p class="chart-key" aria-label="How to read the charts">
+            <span><i class="key-dot" aria-hidden="true"></i><span data-lead-key>Day with a lead</span> <span class="muted">(bigger = more)</span></span>
+            <span><i class="key-band" aria-hidden="true"></i>Shaded = alternate weeks, Mon–Sun</span>
+            <span class="muted">Hover for details</span>
+          </p>
         </div>
         <div class="grid">
           <figure class="card chart"><figcaption><h3>Daily spend</h3><span class="unit" data-unit></span></figcaption><div class="canvas"><canvas id="cSpend"></canvas></div></figure>
