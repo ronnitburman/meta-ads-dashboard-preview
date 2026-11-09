@@ -2,129 +2,192 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Meta Ads Dashboard</title>
   <meta name="description" content="Turn Meta Ads Manager CSV exports into a dashboard with automatic insights. Runs on your device; nothing is uploaded.">
-  <meta name="theme-color" content="#1c5cab">
+  <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Ads Dashboard">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="preload" href="vendor/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="src/styles.css">
   <script src="vendor/papaparse.min.js"></script>
   <script src="vendor/chart.umd.min.js"></script>
 </head>
 <body>
-  <header class="top">
-    <div>
-      <h1>Meta Ads Dashboard</h1>
-      <p class="muted">Drop Ads Manager CSV exports. Everything is processed in your browser; nothing is uploaded.</p>
+  <input id="file" type="file" accept=".csv,text/csv" multiple hidden>
+
+  <header class="bar">
+    <div class="bar-inner">
+      <a class="brand" href="./" aria-label="Meta Ads Dashboard home">
+        <img src="icons/icon.svg" width="24" height="24" alt="">
+        <span>Ads Dashboard</span>
+      </a>
+      <div class="bar-actions">
+        <label id="addFiles" for="file" class="btn btn-primary" role="button" tabindex="0" hidden>
+          <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          Add files
+        </label>
+        <button id="theme" class="icon-btn" type="button" aria-label="Toggle dark mode" title="Toggle dark mode">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"/></svg>
+        </button>
+      </div>
     </div>
-    <button id="theme" class="ghost" type="button" aria-label="Toggle dark mode">◐</button>
   </header>
 
   <main>
-    <label id="drop" class="drop" for="file">
-      <input id="file" type="file" accept=".csv,text/csv" multiple hidden>
-      <strong>Drop CSV exports here</strong>
-      <span class="muted">or click to choose. Select several files at once (one per ad account), and add more any time; overlapping days are counted once.</span>
-    </label>
+    <section id="empty" class="hero">
+      <p class="eyebrow">Meta Ads · CSV → insights</p>
+      <h1>See what your ads are really doing.</h1>
+      <p class="lede">Drop your Ads Manager exports and get the numbers, the trends and the patterns worth acting on in seconds. Everything runs on your device; nothing is uploaded.</p>
 
-    <section id="files" class="files" aria-label="Loaded files"></section>
+      <label id="drop" class="drop" for="file">
+        <span class="drop-icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M20 15v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-4"/></svg>
+        </span>
+        <strong>Drop CSV files here</strong>
+        <span class="muted">or <u>browse</u>. Select several at once, one per ad account.</span>
+      </label>
+
+      <ol class="how">
+        <li><span class="how-n">1</span><div><strong>Export</strong><p>Ads Manager → Campaigns → Breakdown → By time → <b>Day</b> → Export → CSV.</p></div></li>
+        <li><span class="how-n">2</span><div><strong>Drop</strong><p>Add every account at once. Overlapping days are counted once.</p></div></li>
+        <li><span class="how-n">3</span><div><strong>Act</strong><p>Read the patterns, filter, and ask your AI assistant follow-up questions.</p></div></li>
+      </ol>
+    </section>
+
     <p id="errors" class="errors" role="alert"></p>
 
     <div id="dashboard" hidden>
-      <section class="filters" aria-label="Filters">
-        <div id="accountFilter" class="pills" role="group" aria-label="Accounts"></div>
-        <div class="dates">
-          <label>From <input id="from" type="date"></label>
-          <label>To <input id="to" type="date"></label>
-          <label class="check"><input id="hideIdle" type="checkbox" checked> Hide zero-spend campaigns</label>
-          <a class="copy" href="#ask-ai">
-            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            <span>Ask AI about this</span>
-          </a>
+      <section class="toolbar" aria-label="Data and filters">
+        <div class="toolbar-row">
+          <div id="files" class="files" aria-label="Loaded files"></div>
+        </div>
+        <div class="toolbar-row filters">
+          <div id="accountFilter" class="pills" role="group" aria-label="Accounts"></div>
+          <div class="dates">
+            <label class="field"><span>From</span><input id="from" type="date"></label>
+            <label class="field"><span>To</span><input id="to" type="date"></label>
+            <label class="check"><input id="hideIdle" type="checkbox" checked> Hide idle campaigns</label>
+            <a class="btn btn-primary" href="#ask-ai">
+              <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              Ask AI
+            </a>
+          </div>
         </div>
       </section>
 
-      <section id="kpis" class="kpis" aria-label="Key metrics"></section>
+      <section class="section" aria-labelledby="overviewTitle">
+        <div class="section-head">
+          <h2 id="overviewTitle">Overview</h2>
+          <p id="periodLabel" class="muted"></p>
+        </div>
+        <div id="kpis" class="kpis"></div>
+      </section>
 
-      <section class="panel">
-        <h2>What the data says</h2>
+      <section class="section" aria-labelledby="insightsTitle">
+        <div class="section-head">
+          <h2 id="insightsTitle">What the data says</h2>
+          <p id="insightCount" class="muted"></p>
+        </div>
         <ul id="insights" class="insights"></ul>
       </section>
 
-      <section id="ask-ai" class="panel ask" aria-labelledby="askTitle">
-        <div class="ask-head">
-          <h2 id="askTitle">Ask an AI about this data</h2>
-          <p class="muted">Get answers in plain English from ChatGPT, Claude or any assistant you use. We copy a summary of everything on this page (respecting your filters); you paste it into the chat. Nothing is sent anywhere until you paste it.</p>
+      <section id="ask-ai" class="section" aria-labelledby="askTitle">
+        <div class="card ask">
+          <div class="ask-head">
+            <span class="ask-badge" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>
+            </span>
+            <div>
+              <h2 id="askTitle">Ask an AI about this data</h2>
+              <p class="muted">Get answers in plain English from ChatGPT, Claude or any assistant. We copy a summary of everything on this page (with your filters); you paste it into the chat. Nothing is sent until you paste.</p>
+            </div>
+          </div>
+
+          <ol class="steps">
+            <li>
+              <span class="step-n" aria-hidden="true">1</span>
+              <div class="step-body">
+                <label for="aiQuestion" class="step-title">What do you want to know? <span class="muted">Optional</span></label>
+                <div class="chips" role="group" aria-label="Example questions">
+                  <button type="button" class="chip">What should I fix first, and why?</button>
+                  <button type="button" class="chip">Why does one account get leads cheaper than the other?</button>
+                  <button type="button" class="chip">Which campaign deserves more budget next week?</button>
+                  <button type="button" class="chip">Suggest 3 tests to lower my cost per lead.</button>
+                  <button type="button" class="chip">Write a short weekly update for my team.</button>
+                </div>
+                <textarea id="aiQuestion" rows="2" placeholder="Type your own question, or pick one above. Leave empty and the AI starts with the top 3 takeaways."></textarea>
+              </div>
+            </li>
+            <li>
+              <span class="step-n" aria-hidden="true">2</span>
+              <div class="step-body">
+                <span class="step-title">Copy and open your assistant</span>
+                <p class="muted small">One click copies the data and your question, then opens the chat in a new tab.</p>
+                <div class="assistants">
+                  <a class="btn btn-primary assistant" data-assistant href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">ChatGPT</a>
+                  <a class="btn btn-primary assistant" data-assistant href="https://claude.ai/new" target="_blank" rel="noopener noreferrer">Claude</a>
+                  <a class="btn btn-primary assistant" data-assistant href="https://gemini.google.com/app" target="_blank" rel="noopener noreferrer">Gemini</a>
+                  <a class="btn btn-primary assistant" data-assistant href="https://copilot.microsoft.com/" target="_blank" rel="noopener noreferrer">Copilot</a>
+                  <button id="copy" type="button" class="btn btn-secondary">
+                    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+                    Just copy
+                  </button>
+                </div>
+              </div>
+            </li>
+            <li>
+              <span class="step-n" aria-hidden="true">3</span>
+              <div class="step-body">
+                <span class="step-title">Paste into the chat and send</span>
+                <p class="muted small">Click the message box and press <kbd data-paste>⌘V</kbd>. Ask follow-ups as normal; the AI keeps the data in context.</p>
+              </div>
+            </li>
+          </ol>
+
+          <p id="copyStatus" class="copy-status" role="status" aria-live="polite"></p>
+
+          <details id="aiPreview" class="preview">
+            <summary>See exactly what gets copied</summary>
+            <textarea readonly rows="12" aria-label="Text that will be copied"></textarea>
+          </details>
         </div>
-
-        <ol class="steps">
-          <li>
-            <span class="step-n" aria-hidden="true">1</span>
-            <div class="step-body">
-              <label for="aiQuestion" class="step-title">What do you want to know? <span class="muted">(optional)</span></label>
-              <div class="chips" role="group" aria-label="Example questions">
-                <button type="button" class="chip">What should I fix first, and why?</button>
-                <button type="button" class="chip">Why does one account get leads cheaper than the other?</button>
-                <button type="button" class="chip">Which campaign deserves more budget next week?</button>
-                <button type="button" class="chip">Suggest 3 tests to lower my cost per lead.</button>
-                <button type="button" class="chip">Write a short weekly update for my team.</button>
-              </div>
-              <textarea id="aiQuestion" rows="2" placeholder="Type your own question, or pick one above. Leave empty and the AI will start with the top 3 takeaways."></textarea>
-            </div>
-          </li>
-          <li>
-            <span class="step-n" aria-hidden="true">2</span>
-            <div class="step-body">
-              <span class="step-title">Copy and open your assistant</span>
-              <p class="muted small">One click copies the data and your question, then opens the chat in a new tab.</p>
-              <div class="assistants">
-                <a class="assistant" data-assistant href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">ChatGPT</a>
-                <a class="assistant" data-assistant href="https://claude.ai/new" target="_blank" rel="noopener noreferrer">Claude</a>
-                <a class="assistant" data-assistant href="https://gemini.google.com/app" target="_blank" rel="noopener noreferrer">Gemini</a>
-                <a class="assistant" data-assistant href="https://copilot.microsoft.com/" target="_blank" rel="noopener noreferrer">Copilot</a>
-                <button id="copy" type="button" class="assistant secondary">
-                  <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
-                  Just copy
-                </button>
-              </div>
-            </div>
-          </li>
-          <li>
-            <span class="step-n" aria-hidden="true">3</span>
-            <div class="step-body">
-              <span class="step-title">Paste into the chat and send</span>
-              <p class="muted small">Click the message box and press <kbd data-paste>⌘V</kbd>. Ask follow-up questions as normal; the AI keeps the data in context.</p>
-            </div>
-          </li>
-        </ol>
-
-        <p id="copyStatus" class="copy-status" role="status" aria-live="polite"></p>
-
-        <details id="aiPreview" class="preview">
-          <summary>See exactly what gets copied</summary>
-          <textarea readonly rows="12" aria-label="Text that will be copied"></textarea>
-        </details>
       </section>
 
-      <section class="grid">
-        <figure class="panel chart"><figcaption><h3>Daily spend</h3><span class="muted" data-unit></span></figcaption><div class="canvas"><canvas id="cSpend"></canvas></div></figure>
-        <figure class="panel chart"><figcaption><h3 data-results-title>Daily results</h3></figcaption><div class="canvas"><canvas id="cResults"></canvas></div></figure>
-        <figure class="panel chart"><figcaption><h3 data-cpr-title>Cost per result, rolling 7 days</h3><span class="muted" data-unit></span></figcaption><div class="canvas"><canvas id="cCpr"></canvas></div></figure>
-        <figure class="panel chart"><figcaption><h3>Link CTR by day</h3><span class="muted">%</span></figcaption><div class="canvas"><canvas id="cCtr"></canvas></div></figure>
-        <figure class="panel chart wide"><figcaption><h3>By weekday</h3><span class="muted">link CTR % (bars), results per weekday in tooltip</span></figcaption><div class="canvas"><canvas id="cWeekday"></canvas></div></figure>
+      <section class="section" aria-labelledby="trendsTitle">
+        <div class="section-head">
+          <h2 id="trendsTitle">Trends</h2>
+          <p class="muted">Hover a chart for exact numbers.</p>
+        </div>
+        <div class="grid">
+          <figure class="card chart"><figcaption><h3>Daily spend</h3><span class="unit" data-unit></span></figcaption><div class="canvas"><canvas id="cSpend"></canvas></div></figure>
+          <figure class="card chart"><figcaption><h3 data-results-title>Daily results</h3></figcaption><div class="canvas"><canvas id="cResults"></canvas></div></figure>
+          <figure class="card chart"><figcaption><h3 data-cpr-title>Cost per result, rolling 7 days</h3><span class="unit" data-unit></span></figcaption><div class="canvas"><canvas id="cCpr"></canvas></div></figure>
+          <figure class="card chart"><figcaption><h3>Link CTR by day</h3><span class="unit">%</span></figcaption><div class="canvas"><canvas id="cCtr"></canvas></div></figure>
+          <figure class="card chart wide"><figcaption><h3>Link CTR by weekday</h3><span class="unit">% · results in tooltip</span></figcaption><div class="canvas"><canvas id="cWeekday"></canvas></div></figure>
+        </div>
       </section>
 
-      <section class="panel">
-        <h2 id="tableTitle">Campaigns</h2>
-        <div class="table-wrap"><table id="table"></table></div>
+      <section class="section" aria-labelledby="tableTitle">
+        <div class="section-head">
+          <h2 id="tableTitle">Campaigns</h2>
+          <p class="muted">Click a column to sort.</p>
+        </div>
+        <div class="card table-wrap"><table id="table"></table></div>
       </section>
     </div>
   </main>
+
+  <footer class="foot">
+    <p>Runs entirely on your device. Your files are never uploaded.</p>
+  </footer>
+
+  <div class="drop-overlay" aria-hidden="true"><div>Drop to add files</div></div>
 
   <script src="src/parse.js"></script>
   <script src="src/analyze.js"></script>

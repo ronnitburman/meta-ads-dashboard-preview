@@ -49,7 +49,7 @@ Don't rename it: the dashboard reads the account name from the file name.
 
 ### Step 3: Add your files
 
-Open the app, then **drag all your CSV files onto the dashed box at the top**, or click the box and pick them. You can select several files at once (hold **Cmd** on Mac or **Ctrl** on Windows while clicking), so there's no need to add them one by one.
+Open the app, then **drag all your CSV files onto the drop area**, or click it and pick them. Once data is loaded, use **+ Add files** (top right) or drop more files anywhere on the page. You can select several files at once (hold **Cmd** on Mac or **Ctrl** on Windows while clicking), so there's no need to add them one by one.
 
 - **On a phone:** tap the box and choose the CSVs from Files, Drive or Downloads. To get them onto your phone, email them to yourself or save them to Drive or iCloud.
 - **On Android (installed app):** you can also select CSVs in Files, Gmail or Drive, tap **Share**, and pick **Ads Dashboard**.
@@ -72,11 +72,12 @@ That's it: the dashboard fills in below.
 
 **Handy controls**
 
-- Click an **account name** above the numbers to hide or show that account.
+- Click an **account** in the filter bar to hide or show it.
 - Change **From / To** to zoom into a period.
-- Click an account's name in the **file list** to give it a friendlier name.
+- Click an account's name in the **file chips** at the top to give it a friendlier name.
 - **×** removes a file, and **Clear all** starts over.
-- **◐** (top-right) switches between light and dark.
+- **◐** (top right) switches between light and dark.
+- **Hide idle campaigns** leaves out campaigns that spent nothing.
 
 The dashboard remembers your files on this computer, in this browser, until you click **Clear all**.
 
@@ -90,7 +91,7 @@ Below the patterns there's an **Ask an AI about this data** panel. It takes thre
 
 The copy covers exactly what's on screen: the period, accounts, totals, per-account and per-campaign tables, the patterns found, and the day-by-day and weekday numbers. Hide an account or narrow the dates first to ask about just that slice. To see exactly what will be shared, open **See exactly what gets copied**. Nothing leaves your device until you paste it.
 
-The **Ask AI about this** button next to the date filters jumps to the panel.
+The **Ask AI** button in the filter bar jumps to the panel.
 
 ### Patterns it looks for
 

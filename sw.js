@@ -2,7 +2,7 @@
 // shared from other apps (Android share sheet). Only active over http(s);
 // opening index.html from disk skips it.
 
-const SHELL = 'shell-v1';
+const SHELL = 'shell-v2';
 const SHARED = 'shared-files';
 const ASSETS = [
   './',
@@ -15,6 +15,8 @@ const ASSETS = [
   'src/app.js',
   'vendor/papaparse.min.js',
   'vendor/chart.umd.min.js',
+  'vendor/fonts/inter-latin-wght-normal.woff2',
+  'vendor/fonts/inter-latin-ext-wght-normal.woff2',
   'icons/icon.svg',
   'icons/icon-192.png',
   'icons/icon-512.png',

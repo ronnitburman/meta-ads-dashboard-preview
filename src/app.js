@@ -97,6 +97,9 @@
   function render() {
     const has = state.exports.length > 0;
     $('#dashboard').hidden = !has;
+    $('#empty').hidden = has;
+    $('#addFiles').hidden = !has;
+    document.body.classList.toggle('has-data', has);
     renderFiles();
     if (!has) return;
     currency = state.exports[0].currency;
@@ -119,10 +122,10 @@
       return `<div class="file" title="${esc(ex.fileName)}">
         <span class="swatch" style="background:${seriesColor(ex.account.id)}"></span>
         <span class="name" data-rename="${esc(ex.account.id)}" title="Click to rename this account">${esc(name)}</span>
-        <span class="muted">${ex.level.toLowerCase()}s · ${range ? `${fmtDay(range.from)} – ${fmtDay(range.to)}` : `${ex.rows.length} rows`}</span>
+        <span class="meta">${range ? `${fmtDay(range.from)} – ${fmtDay(range.to)}` : `${ex.rows.length} rows`}</span>
         <button type="button" data-remove="${esc(ex.fileName)}" aria-label="Remove ${esc(ex.fileName)}">×</button>
       </div>`;
-    }).join('') + (state.exports.length ? '<button class="ghost" type="button" data-clear>Clear all</button>' : '');
+    }).join('') + (state.exports.length ? '<button class="btn btn-ghost" type="button" data-clear>Clear all</button>' : '');
   }
 
   function renderFilters() {
@@ -144,8 +147,12 @@
   function renderKpis(rows, label, unit) {
     const t = totals(rows);
     const range = dateRange(rows);
+    const accounts = new Set(rows.map((r) => r.accountId)).size;
+    $('#periodLabel').textContent = range
+      ? `${fmtDay(range.from)} – ${fmtDay(range.to)} · ${accounts} account${accounts === 1 ? '' : 's'}`
+      : '';
     const tiles = [
-      ['Amount spent', money(t.spend), range ? `${fmtDay(range.from)} – ${fmtDay(range.to)}` : ''],
+      ['Amount spent', money(t.spend), t.activeDays ? `${t.activeDays} days with spend` : ''],
       [label, int(t.results), t.activeDays ? `${(t.results / t.activeDays).toFixed(2)} per active day` : ''],
       [`Cost per ${unit}`, money(t.cpr), ''],
       ['Link clicks', int(t.clicks), `${t.clicksPerResult ? t.clicksPerResult.toFixed(1) : '–'} clicks per ${unit}`],
@@ -159,25 +166,35 @@
   const TONES = { critical: ['Critical', '⛔'], warning: ['Watch', '▲'], good: ['Working', '✓'], info: ['Pattern', '●'] };
   function renderInsights(rows) {
     const list = insights(rows, (n) => money(n));
+    const urgent = list.filter((i) => i.tone === 'critical' || i.tone === 'warning').length;
+    $('#insightCount').textContent = list.length
+      ? `${list.length} found${urgent ? ` · ${urgent} need attention` : ''}`
+      : '';
     $('#insights').innerHTML = list.length
       ? list.map((i) => `<li class="insight" data-tone="${i.tone}">
           <span class="tag" data-icon="${TONES[i.tone][1]}">${TONES[i.tone][0]}</span>
           <strong>${esc(i.title)}</strong><p>${esc(i.detail)}</p></li>`).join('')
-      : '<li class="muted">Not enough spend in this selection to find patterns.</li>';
+      : '<li class="empty">Not enough spend in this selection to find patterns.</li>';
   }
 
   // ---------- charts ----------
   function baseOptions({ stacked = false, integer = false, yFmt = (v) => v } = {}) {
     const grid = css('--grid');
-    const text = css('--text-secondary');
+    const text = css('--text-muted');
+    Chart.defaults.font.family = css('--font');
+    Chart.defaults.font.size = 11;
     return {
       responsive: true,
       maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       animation: false,
       plugins: {
-        legend: { display: true, position: 'bottom', labels: { color: text, boxWidth: 10, boxHeight: 10, useBorderRadius: true, borderRadius: 3 } },
-        tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${c.raw == null ? '–' : yFmt(c.raw)}` } },
+        legend: { display: true, position: 'bottom', align: 'start', labels: { color: css('--text-secondary'), usePointStyle: true, pointStyle: 'circle', boxWidth: 6, boxHeight: 6, padding: 16, font: { size: 12 } } },
+        tooltip: {
+          backgroundColor: css('--ink'), titleColor: css('--on-ink'), bodyColor: css('--on-ink'),
+          padding: 10, cornerRadius: 8, boxPadding: 4, usePointStyle: true, titleFont: { weight: '600' },
+          callbacks: { label: (c) => `${c.dataset.label}: ${c.raw == null ? '–' : yFmt(c.raw)}` },
+        },
       },
       scales: {
         x: { stacked, grid: { display: false }, ticks: { color: text, maxRotation: 0, autoSkipPadding: 12 }, border: { color: grid } },
@@ -236,7 +253,7 @@
     let list = byEntity(rows);
     if (state.hideIdle) list = list.filter((e) => e.spend > 0);
     const cols = [
-      ['entity', level, (e) => `${esc(e.entity)}${e.delivery ? `<span class="badge">${esc(e.delivery)}</span>` : ''}`],
+      ['entity', level, (e) => `${esc(e.entity)}${e.delivery ? `<span class="badge" data-state="${esc(e.delivery)}">${esc(e.delivery)}</span>` : ''}`],
       ['account', 'Account', (e) => `<span class="swatch" style="display:inline-block;margin-right:6px;background:${seriesColor(e.accountId)}"></span>${esc(e.account)}`],
       ['spend', 'Spent', (e) => money(e.spend)],
       ['results', label, (e) => int(e.results)],
@@ -261,13 +278,22 @@
   }
 
   // ---------- events ----------
-  const drop = $('#drop');
   $('#file').addEventListener('change', (e) => { ingest([...e.target.files]); e.target.value = ''; });
-  ['dragenter', 'dragover'].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add('over'); }));
-  ['dragleave', 'drop'].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove('over'); }));
-  drop.addEventListener('drop', (e) => ingest([...e.dataTransfer.files].filter((f) => /\.csv$/i.test(f.name))));
+  // Files can be dropped anywhere on the page; the drop zone and overlay light up while dragging.
+  let dragDepth = 0;
+  const hasFiles = (e) => [...(e.dataTransfer?.types ?? [])].includes('Files');
+  window.addEventListener('dragenter', (e) => { if (hasFiles(e)) { dragDepth += 1; document.body.classList.add('dragging'); } });
+  window.addEventListener('dragleave', () => { dragDepth = Math.max(0, dragDepth - 1); if (!dragDepth) document.body.classList.remove('dragging'); });
   window.addEventListener('dragover', (e) => e.preventDefault());
-  window.addEventListener('drop', (e) => e.preventDefault());
+  window.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dragDepth = 0;
+    document.body.classList.remove('dragging');
+    const files = [...(e.dataTransfer?.files ?? [])].filter((f) => /\.csv$/i.test(f.name));
+    if (files.length) ingest(files);
+  });
+  // The "Add files" label acts as a button for keyboard users too.
+  $('#addFiles').addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#file').click(); } });
 
   $('#files').addEventListener('click', (e) => {
     const rm = e.target.closest('[data-remove]');
